@@ -56,7 +56,7 @@ const Wardrobe = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/wardrobe/${id}`, {
+      await axios.delete(`https://outfit-ai-9snk.onrender.com/api/wardrobe/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchItems();

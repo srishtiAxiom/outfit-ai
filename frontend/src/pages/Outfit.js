@@ -24,7 +24,7 @@ const Outfit = () => {
     setRecommendation('');
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/outfit/recommend',
+        'https://outfit-ai-9snk.onrender.com/api/outfit/recommend',
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -24,7 +24,7 @@ const Register = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const res = await axios.post('https://outfit-ai-9snk.onrender.com/api/auth/register', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify({ name: res.data.name, email: res.data.email }));
       navigate('/dashboard');
