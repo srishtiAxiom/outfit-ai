@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const Wardrobe = () => {
@@ -17,16 +17,16 @@ const Wardrobe = () => {
 
   const token = localStorage.getItem('token');
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/wardrobe', {
+      const res = await axios.get('https://outfit-ai-9snk.onrender.com/api/wardrobe', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setItems(res.data);
     } catch (err) {
       setError('Failed to fetch wardrobe items');
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchItems();
