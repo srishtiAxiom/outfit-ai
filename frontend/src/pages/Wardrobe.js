@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
+const API_URL = 'https://outfit-ai-9snk.onrender.com';
+
 const Wardrobe = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
@@ -36,6 +40,26 @@ const Wardrobe = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setUploadLoading(true);
+    try {
+      const formDataImg = new FormData();
+      formDataImg.append('image', file);
+      const res = await axios.post(`${API_URL}/api/upload`, formDataImg, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setFormData(prev => ({ ...prev, imageUrl: res.data.imageUrl }));
+    } catch (err) {
+      console.error('Image upload failed:', err);
+    }
+    setUploadLoading(false);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -136,14 +160,15 @@ const Wardrobe = () => {
               </select>
             </div>
             <div className="form-group">
-              <label>Image URL (optional)</label>
+              <label>Upload Photo (optional)</label>
               <input
-                type="text"
-                name="imageUrl"
-                placeholder="Paste image link here"
-                value={formData.imageUrl}
-                onChange={handleChange}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ padding: '8px 0' }}
               />
+              {uploadLoading && <p style={{ color: '#6c63ff', fontSize: '13px' }}>Uploading image...</p>}
+              {formData.imageUrl && <p style={{ color: '#2ed573', fontSize: '13px' }}>Image uploaded successfully!</p>}
             </div>
 
             {error && <p className="error">{error}</p>}
