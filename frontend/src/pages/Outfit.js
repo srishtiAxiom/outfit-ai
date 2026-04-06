@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const API_URL = 'https://outfit-ai-9snk.onrender.com';
+
 const Outfit = () => {
   const [formData, setFormData] = useState({
     occasion: '',
     weather: '',
     temperature: ''
   });
+  const [city, setCity] = useState('');
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const [recommendation, setRecommendation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,6 +22,26 @@ const Outfit = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const fetchWeather = async () => {
+    if (!city) return;
+    setWeatherLoading(true);
+    setError('');
+    try {
+      const res = await axios.get(`${API_URL}/api/weather/${city}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWeatherData(res.data);
+      setFormData(prev => ({
+        ...prev,
+        weather: res.data.weather,
+        temperature: res.data.temperature
+      }));
+    } catch (err) {
+      setError('City not found. Please try again!');
+    }
+    setWeatherLoading(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -24,7 +49,7 @@ const Outfit = () => {
     setRecommendation('');
     try {
       const res = await axios.post(
-        'https://outfit-ai-9snk.onrender.com/api/outfit/recommend',
+        `${API_URL}/api/outfit/recommend`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -35,9 +60,71 @@ const Outfit = () => {
     setLoading(false);
   };
 
+  const weatherEmoji = {
+    Clear: '☀️', Clouds: '☁️', Rain: '🌧️',
+    Drizzle: '🌦️', Thunderstorm: '⛈️', Snow: '❄️',
+    Mist: '🌫️', Haze: '🌫️'
+  };
+
   return (
     <div className="container" style={{ paddingTop: '40px' }}>
       <h1 className="page-title">AI Outfit Recommendation ✨</h1>
+
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <h2 style={{ marginBottom: '16px', color: '#6c63ff', fontSize: '18px' }}>
+          🌤️ Get Live Weather
+        </h2>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+            <label>Your City</label>
+            <input
+              type="text"
+              placeholder="e.g. Mumbai, Delhi, Bangalore"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && fetchWeather()}
+            />
+          </div>
+          <button
+            onClick={fetchWeather}
+            className="btn btn-primary"
+            disabled={weatherLoading}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {weatherLoading ? 'Loading...' : '🌤️ Get Weather'}
+          </button>
+        </div>
+
+        {weatherData && (
+          <div style={{
+            marginTop: '16px',
+            background: 'linear-gradient(135deg, #6c63ff22, #a855f722)',
+            borderRadius: '12px',
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            <div style={{ fontSize: '48px' }}>
+              {weatherEmoji[weatherData.weather] || '🌡️'}
+            </div>
+            <div>
+              <h3 style={{ margin: 0, color: '#6c63ff' }}>{weatherData.city}</h3>
+              <p style={{ margin: '4px 0', fontSize: '24px', fontWeight: '700' }}>
+                {weatherData.temperature}°C
+              </p>
+              <p style={{ margin: 0, color: '#888', textTransform: 'capitalize' }}>
+                {weatherData.description} • Feels like {weatherData.feelsLike}°C
+              </p>
+            </div>
+            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+              <p style={{ margin: 0, color: '#2ed573', fontWeight: '500' }}>
+                ✅ Auto-filled below!
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div className="card">
@@ -61,12 +148,13 @@ const Outfit = () => {
               <label>Weather</label>
               <select name="weather" value={formData.weather} onChange={handleChange} required>
                 <option value="">Select weather</option>
-                <option value="sunny">Sunny</option>
-                <option value="cloudy">Cloudy</option>
-                <option value="rainy">Rainy</option>
-                <option value="windy">Windy</option>
-                <option value="cold">Cold</option>
-                <option value="hot">Hot & Humid</option>
+                <option value="Clear">Sunny</option>
+                <option value="Clouds">Cloudy</option>
+                <option value="Rain">Rainy</option>
+                <option value="Drizzle">Drizzle</option>
+                <option value="Thunderstorm">Thunderstorm</option>
+                <option value="Snow">Snowy</option>
+                <option value="Mist">Misty</option>
               </select>
             </div>
             <div className="form-group">
@@ -135,7 +223,7 @@ const Outfit = () => {
             <div className="card" style={{ textAlign: 'center', padding: '60px 24px' }}>
               <div style={{ fontSize: '56px', marginBottom: '16px' }}>👗</div>
               <h3 style={{ color: '#2d3436', marginBottom: '8px' }}>Ready to style you!</h3>
-              <p style={{ color: '#888' }}>Fill in the form and let AI create your perfect outfit from your wardrobe</p>
+              <p style={{ color: '#888' }}>Enter your city above to get live weather, then let AI create your perfect outfit!</p>
             </div>
           )}
         </div>
