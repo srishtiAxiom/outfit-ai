@@ -1,4 +1,5 @@
-import React from 'react';
+// v2.0 - with history and weather
+// import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
