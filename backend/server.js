@@ -19,6 +19,7 @@ app.use('/api/wardrobe', require('./routes/wardrobe'));
 app.use('/api/outfit', require('./routes/outfit'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/weather', require('./routes/weather'));
+app.use('/api/history', require('./routes/history'));
 app.get('/', (req, res) => {
   res.json({ message: 'AI Outfit API is running!' });
 });

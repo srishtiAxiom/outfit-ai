@@ -32,7 +32,9 @@ const Navbar = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>Home</Link>
           <Link to="/wardrobe" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>My Wardrobe</Link>
-          <Link to="/outfit" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>Get Outfit</Link>
+          <Link to="/outfit" style={{ color: 'white', textDecoration: 'none', fontWeight: '500'
+           }}>Get Outfit</Link>
+           <Link to="/history" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>History</Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ color: 'white', fontSize: '14px' }}>Hi, {user.name}!</span>
             <button onClick={logout} style={{

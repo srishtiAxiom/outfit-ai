@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Wardrobe from './pages/Wardrobe';
 import Outfit from './pages/Outfit';
+import History from './pages/History';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/wardrobe" element={token ? <Wardrobe /> : <Navigate to="/login" />} />
         <Route path="/outfit" element={token ? <Outfit /> : <Navigate to="/login" />} />
+        <Route path="/history" element={token ? <History /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

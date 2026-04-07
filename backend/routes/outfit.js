@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Groq = require('groq-sdk');
 const Wardrobe = require('../models/Wardrobe');
+const OutfitHistory = require('../models/OutfitHistory');
 const { protect } = require('../middleware/auth');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -39,6 +40,15 @@ Please suggest a complete outfit by selecting items from the wardrobe list above
     });
 
     const recommendation = response.choices[0].message.content;
+
+    await OutfitHistory.create({
+      user: req.user.id,
+      occasion,
+      weather,
+      temperature,
+      recommendation,
+    });
+
     res.json({ recommendation });
 
   } catch (error) {
