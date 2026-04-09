@@ -9,6 +9,7 @@ import Outfit from './pages/Outfit';
 import History from './pages/History';
 import Navbar from './components/Navbar';
 import './App.css';
+import ChatBubble from './components/ChatBubble.js';
 
 const App = () => {
   const token = localStorage.getItem('token');
