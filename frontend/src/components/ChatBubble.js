@@ -59,9 +59,12 @@ export default function ChatBubble() {
       {open && (
         <div className="chat-window">
           <div className="chat-header">
-            <span>👗 Outfit Stylist</span>
-            <button onClick={() => setOpen(false)}>✕</button>
-          </div>
+  <span>👗 Outfit Stylist</span>
+  <div style={{ display: 'flex', gap: '8px' }}>
+    <button onClick={() => setMessages([{ role: "assistant", content: "Hi! I'm your Outfit AI stylist 👗 Ask me what to wear today!" }])} title="New Chat">🔄</button>
+    <button onClick={() => setOpen(false)}>✕</button>
+  </div>
+</div>
           <div className="chat-messages">
             {messages.map((m, i) => (
               <div key={i} className={`chat-msg ${m.role}`}>
