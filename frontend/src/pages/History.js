@@ -21,8 +21,8 @@ const History = () => {
   };
 
   useEffect(() => {
-    fetchHistory();
-  }, []);
+  fetchHistory();
+}, [fetchHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (id) => {
     try {

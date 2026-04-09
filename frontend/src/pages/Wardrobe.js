@@ -7,7 +7,8 @@ const Wardrobe = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
