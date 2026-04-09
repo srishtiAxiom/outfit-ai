@@ -26,6 +26,7 @@ const App = () => {
         <Route path="/outfit" element={token ? <Outfit /> : <Navigate to="/login" />} />
         <Route path="/history" element={token ? <History /> : <Navigate to="/login" />} />
       </Routes>
+      <ChatBubble />
     </Router>
   );
 };
