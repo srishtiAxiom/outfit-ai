@@ -8,21 +8,21 @@ const History = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token');
 
-  const fetchHistory = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/history`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setHistory(res.data);
-    } catch (err) {
-      console.error('Failed to fetch history');
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-  fetchHistory();
-}, [fetchHistory]); // eslint-disable-line react-hooks/exhaustive-deps
+    const fetchHistory = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/history`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setHistory(res.data);
+      } catch (err) {
+        console.error('Failed to fetch history');
+      }
+      setLoading(false);
+    };
+
+    fetchHistory();
+  }, [token]);
 
   const handleDelete = async (id) => {
     try {
