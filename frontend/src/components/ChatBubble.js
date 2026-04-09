@@ -61,7 +61,11 @@ export default function ChatBubble() {
           <div className="chat-header">
   <span>👗 Outfit Stylist</span>
   <div style={{ display: 'flex', gap: '8px' }}>
-    <button onClick={() => setMessages([{ role: "assistant", content: "Hi! I'm your Outfit AI stylist 👗 Ask me what to wear today!" }])} title="New Chat">🔄</button>
+    <button onClick={() => {
+  if (window.confirm("Start a new chat? This will clear the current conversation.")) {
+    setMessages([{ role: "assistant", content: "Hi! I'm your Outfit AI stylist 👗 Ask me what to wear today!" }]);
+  }
+}} title="New Chat">🔄</button>
     <button onClick={() => setOpen(false)}>✕</button>
   </div>
 </div>
