@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Groq = require("groq-sdk");
-const authMiddleware = require("../middleware/auth");
+const { protect: authMiddleware } = require("../middleware/auth");
 const User = require("../models/User");
 const WardrobeItem = require("../models/Wardrobe");
 const OutfitHistory = require("../models/OutfitHistory");
