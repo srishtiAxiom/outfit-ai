@@ -3,7 +3,7 @@ const router = express.Router();
 const Groq = require("groq-sdk");
 const authMiddleware = require("../middleware/auth");
 const User = require("../models/User");
-const WardrobeItem = require("../models/WardrobeItem");
+const WardrobeItem = require("../models/Wardrobe");
 const OutfitHistory = require("../models/OutfitHistory");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
