@@ -67,7 +67,7 @@ const [imageFile, setImageFile] = useState(null);
     setError('');
     setSuccess('');
     try {
-      await axios.post('http://localhost:5000/api/wardrobe', formData, {
+      await axios.post(`${API_URL}/api/wardrobe`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Item added successfully!');
