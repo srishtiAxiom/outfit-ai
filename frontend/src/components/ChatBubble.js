@@ -6,8 +6,8 @@ const API = process.env.REACT_APP_API_URL || "https://outfit-ai-9snk.onrender.co
 export default function ChatBubble() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi! I'm your Outfit AI stylist 👗 Ask me what to wear today!" }
-  ]);
+  { role: "assistant", content: "Hey there! 👋 I'm your personal Outfit AI stylist ✨\n\nTell me about your day, the occasion, or just ask — and I'll put together the perfect look from your wardrobe! 👗🌤️" }
+]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
@@ -63,7 +63,7 @@ export default function ChatBubble() {
   <div style={{ display: 'flex', gap: '8px' }}>
     <button onClick={() => {
   if (window.confirm("Start a new chat? This will clear the current conversation.")) {
-    setMessages([{ role: "assistant", content: "Hi! I'm your Outfit AI stylist 👗 Ask me what to wear today!" }]);
+    setMessages([{ role: "assistant", content: "Hey there! 👋 I'm your personal Outfit AI stylist ✨\n\nTell me about your day, the occasion, or just ask — and I'll put together the perfect look from your wardrobe! 👗🌤️" }]);
   }
 }} title="New Chat">🔄</button>
     <button onClick={() => setOpen(false)}>✕</button>
@@ -75,7 +75,14 @@ export default function ChatBubble() {
                 {m.content}
               </div>
             ))}
-            {loading && <div className="chat-msg assistant typing">Thinking...</div>}
+            {loading && (
+  <div className="chat-msg assistant typing">
+    Styling your look
+    <div className="dot-flashing">
+      <span /><span /><span />
+    </div>
+  </div>
+)}
             <div ref={bottomRef} />
           </div>
           <div className="chat-input-row">
