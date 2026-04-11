@@ -13,7 +13,6 @@ app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001', 'https://outfit-ai-phi.vercel.app'],
   credentials: true
 }));
-app.options('*', cors()); // ← ADD THIS
 app.use(express.json());
 
 // ✅ Routes AFTER middleware
