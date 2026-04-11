@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Wardrobe from './pages/Wardrobe';
 import Outfit from './pages/Outfit';
 import History from './pages/History';
-import Profile from './pages/Profile.js';       // ← NEW
+import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 import './App.css';
 import ChatBubble from './components/ChatBubble.js';

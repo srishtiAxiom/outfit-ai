@@ -21,7 +21,7 @@ export default function Profile() {
       .then(r => r.json())
       .then(data => {
         setUser(data);
-        if (data.measurements) setMeasurements(data.measurements);
+        if (data.measurements) setMeasurements(prev => ({ ...prev, ...data.measurements }));
         if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
         if (data.bodyType) setBodyType(data.bodyType);
       });
@@ -74,6 +74,13 @@ export default function Profile() {
       showToast('❌ Upload failed.');
     }
   };
+
+  // ✅ NULL CHECK HERE — after all hooks, before return
+  if (!user) return (
+    <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'Poppins, sans-serif' }}>
+      <p>Loading profile...</p>
+    </div>
+  );
 
   return (
     <div className="profile-page">

@@ -17,6 +17,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
     // Fetch context
     const user = await User.findById(userId).select("-password");
+if (!user) return res.status(404).json({ error: "User not found" });
     const wardrobe = await WardrobeItem.find({ user: userId });
     const history = await OutfitHistory.find({ user: userId }).sort({ createdAt: -1 }).limit(10);
 

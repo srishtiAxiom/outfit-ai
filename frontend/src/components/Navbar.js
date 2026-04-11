@@ -35,6 +35,7 @@ const Navbar = () => {
           <Link to="/outfit" style={{ color: 'white', textDecoration: 'none', fontWeight: '500'
            }}>Get Outfit</Link>
            <Link to="/history" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>History</Link>
+<Link to="/profile" style={{ color: 'white', textDecoration: 'none', fontWeight: '500' }}>Profile</Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ color: 'white', fontSize: '14px' }}>Hi, {user.name}!</span>
             <button onClick={logout} style={{
