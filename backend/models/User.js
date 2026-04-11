@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  // ✅ NEW FIELDS
+  measurements: {
+    height: { type: String, default: '' },
+    weight: { type: String, default: '' },
+    chest:  { type: String, default: '' },
+    waist:  { type: String, default: '' },
+    hips:   { type: String, default: '' },
+  },
+  avatarUrl: { type: String, default: '' },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

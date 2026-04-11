@@ -10,7 +10,7 @@ const app = express();
 
 // ✅ Middleware FIRST
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://outfit-ai-phi.vercel.app'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'https://outfit-ai-phi.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
@@ -22,7 +22,8 @@ app.use('/api/outfit', require('./routes/outfit'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/weather', require('./routes/weather'));
 app.use('/api/history', require('./routes/history'));
-app.use('/api/chat', require('./routes/chat'));   // ✅ added here
+app.use('/api/chat', require('./routes/chat'));
+app.use('/api/profile', require('./routes/profile'));  // ✅ moved here
 
 app.get('/', (req, res) => {
   res.json({ message: 'AI Outfit API is running!' });

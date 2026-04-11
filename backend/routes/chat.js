@@ -28,9 +28,10 @@ router.post("/", authMiddleware, async (req, res) => {
       ? history.map(h => `- ${h.outfitDescription} (${new Date(h.createdAt).toLocaleDateString()})`).join("\n")
       : "No outfit history yet.";
 
-    const measurementsText = user.measurements
-      ? Object.entries(user.measurements).map(([k, v]) => `${k}: ${v}`).join(", ")
-      : "Not provided.";
+    const m = user.measurements || {};
+const measurementsText = Object.values(m).some(v => v)
+  ? Object.entries(m).map(([k, v]) => `${k}: ${v}`).join(", ")
+  : "Not provided.";
 
     const weatherText = weather
       ? `${weather.description}, ${weather.temp}°C, ${weather.city}`
