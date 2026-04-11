@@ -17,14 +17,24 @@ export default function Profile() {
   const [toast, setToast] = useState('');
 
   useEffect(() => {
+    console.log('Fetching profile...');
     fetch(`${API}/api/profile/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+      .then(r => {
+        console.log('Response status:', r.status);
+        return r.json();
+      })
       .then(data => {
+        console.log('Profile data:', data);
+        if (!data || data.message || data.error) {
+          console.log('Bad data, skipping:', data);
+          return;
+        }
         setUser(data);
         if (data.measurements) setMeasurements(prev => ({ ...prev, ...data.measurements }));
         if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
         if (data.bodyType) setBodyType(data.bodyType);
-      });
+      })
+      .catch(err => console.error('Profile fetch error:', err));
   }, []);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
