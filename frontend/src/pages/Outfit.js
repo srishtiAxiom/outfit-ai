@@ -44,27 +44,24 @@ const Outfit = () => {
     setWeatherLoading(false);
   };
 
-  const generateOutfitImage = async (recommendationText) => {
-    setImageLoading(true);
-    setOutfitImageUrl('');
+  const generateOutfitImage = (recommendationText) => {
+  setImageLoading(true);
+  setOutfitImageUrl('');
 
-    const bodyType = userProfile?.bodyType || 'average';
-    const occasion = formData.occasion || 'casual';
-    const weather = formData.weather || 'clear';
+  const bodyType = userProfile?.bodyType || 'average';
+  const occasion = formData.occasion || 'casual';
 
-    const lines = recommendationText.split('\n').slice(0, 4).join(' ');
-    const cleanText = lines.replace(/[*#]/g, '').slice(0, 200);
+  const lines = recommendationText.split('\n').slice(0, 3).join(' ');
+  const cleanText = lines.replace(/[*#]/g, '').slice(0, 150);
 
-    const prompt = `full body fashion illustration, ${bodyType} body type, ${occasion} outfit, ${weather} weather, ${cleanText}, stylish, modern fashion photography, white background, professional fashion editorial`;
+  const prompt = `full body fashion illustration, ${bodyType} body type, ${occasion} outfit, ${cleanText}, stylish, white background, fashion editorial`;
 
-    const encodedPrompt = encodeURIComponent(prompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${Date.now()}`;
+  const encodedPrompt = encodeURIComponent(prompt);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${Math.floor(Math.random()*10000)}`;
 
-    const img = new Image();
-    img.onload = () => { setOutfitImageUrl(imageUrl); setImageLoading(false); };
-    img.onerror = () => { setImageLoading(false); };
-    img.src = imageUrl;
-  };
+  setOutfitImageUrl(imageUrl);
+  setImageLoading(false);
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
