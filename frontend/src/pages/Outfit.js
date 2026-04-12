@@ -45,23 +45,24 @@ const Outfit = () => {
   };
 
   const generateOutfitImage = (recommendationText) => {
-  setImageLoading(true);
-  setOutfitImageUrl('');
+    setImageLoading(true);
+    setOutfitImageUrl('');
 
-  const bodyType = userProfile?.bodyType || 'average';
-  const occasion = formData.occasion || 'casual';
+    const bodyType = userProfile?.bodyType || 'fashion model';
+    const occasion = formData.occasion || 'casual';
 
-  const lines = recommendationText.split('\n').slice(0, 3).join(' ');
-  const cleanText = lines.replace(/[*#]/g, '').slice(0, 150);
+    const lines = recommendationText.split('\n').slice(0, 3).join(' ');
+    const cleanText = lines.replace(/[*#\[\]]/g, '').slice(0, 150);
 
-  const prompt = `full body fashion illustration, ${bodyType} body type, ${occasion} outfit, ${cleanText}, stylish, white background, fashion editorial`;
+    const prompt = `full body fashion illustration, ${bodyType} body type, ${occasion} occasion, wearing ${cleanText}, stylish modern outfit, plain white background, fashion editorial photography`;
 
-  const encodedPrompt = encodeURIComponent(prompt);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${Math.floor(Math.random()*10000)}`;
+    const encodedPrompt = encodeURIComponent(prompt);
+    const seed = Math.floor(Math.random() * 99999);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${seed}`;
 
-  setOutfitImageUrl(imageUrl);
-  setImageLoading(false);
-};
+    setOutfitImageUrl(imageUrl);
+    setImageLoading(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -197,7 +198,9 @@ const Outfit = () => {
                 }}>
                   {recommendation}
                 </div>
-                <button onClick={() => { setRecommendation(''); setOutfitImageUrl(''); }} className="btn btn-primary" style={{ marginTop: '16px' }}>
+                <button
+                  onClick={() => { setRecommendation(''); setOutfitImageUrl(''); }}
+                  className="btn btn-primary" style={{ marginTop: '16px' }}>
                   Get Another Recommendation
                 </button>
               </div>
@@ -207,34 +210,27 @@ const Outfit = () => {
                   <div style={{ fontSize: '28px' }}>🎨</div>
                   <h2 style={{ color: '#6c63ff', fontSize: '18px' }}>AI Outfit Preview</h2>
                 </div>
-
                 {imageLoading && (
                   <div style={{ padding: '40px 0' }}>
-                    <div style={{ fontSize: '36px', marginBottom: '12px' }}>⏳</div>
-                    <p style={{ color: '#6c63ff', fontWeight: '500' }}>Generating outfit preview...</p>
-                    <p style={{ color: '#888', fontSize: '13px', marginTop: '6px' }}>AI is visualizing your look</p>
+                    <p style={{ color: '#6c63ff', fontWeight: '500' }}>⏳ Generating outfit preview...</p>
                   </div>
                 )}
-
-                {outfitImageUrl && !imageLoading && (
+                {outfitImageUrl && (
                   <div>
                     <img
                       src={outfitImageUrl}
                       alt="AI outfit preview"
+                      onError={(e) => { e.target.style.display = 'none'; }}
                       style={{
                         width: '100%', maxWidth: '300px', borderRadius: '12px',
-                        border: '2px solid #6c63ff22', boxShadow: '0 4px 20px rgba(108,99,255,0.15)'
+                        border: '2px solid #6c63ff33',
+                        boxShadow: '0 4px 20px rgba(108,99,255,0.15)',
+                        minHeight: '200px'
                       }}
                     />
                     <p style={{ color: '#888', fontSize: '12px', marginTop: '10px' }}>
-                      AI-generated outfit visualization based on your recommendation
+                      AI-generated visualization based on your outfit • Takes ~15 sec to load
                     </p>
-                  </div>
-                )}
-
-                {!outfitImageUrl && !imageLoading && (
-                  <div style={{ padding: '20px 0', color: '#888' }}>
-                    <p>Preview unavailable. Try again!</p>
                   </div>
                 )}
               </div>
