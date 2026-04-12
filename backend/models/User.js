@@ -38,6 +38,6 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Indexes for faster queries
-userSchema.index({ email: 1 });  // fast login lookup (unique already, this makes it explicit)
+
 
 module.exports = mongoose.model('User', userSchema);

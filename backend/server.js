@@ -2,9 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cron = require('node-cron');
+const https = require('https');
 const connectDB = require('./config/db');
 const { helmet, mongoSanitize, xssClean, corsOptions, globalLimiter, authLimiter, aiLimiter } = require('./middleware/security');
 const errorHandler = require('./middleware/errorHandler');
+const { weatherCacheMiddleware, wardrobeCacheMiddleware } = require('./middleware/cache');
 
 dotenv.config();
 connectDB();
@@ -24,10 +27,10 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Routes
 app.use('/api/auth', authLimiter, require('./routes/auth'));
-app.use('/api/wardrobe', require('./routes/wardrobe'));
+app.use('/api/wardrobe', wardrobeCacheMiddleware, require('./routes/wardrobe'));
 app.use('/api/outfit', aiLimiter, require('./routes/outfit'));
 app.use('/api/upload', require('./routes/upload'));
-app.use('/api/weather', require('./routes/weather'));
+app.use('/api/weather', weatherCacheMiddleware, require('./routes/weather'));
 app.use('/api/history', require('./routes/history'));
 app.use('/api/chat', aiLimiter, require('./routes/chat'));
 app.use('/api/profile', require('./routes/profile'));
@@ -41,9 +44,6 @@ app.get('/', (req, res) => {
 });
 
 // Self-ping to prevent Render cold starts
-const cron = require('node-cron');
-const https = require('https');
-
 cron.schedule('*/14 * * * *', () => {
   const url = process.env.BACKEND_URL || 'https://outfit-ai-9snk.onrender.com/health';
   https.get(url, (res) => {
