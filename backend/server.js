@@ -36,6 +36,18 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+// Self-ping to prevent Render cold starts
+const cron = require('node-cron');
+const https = require('https');
+
+cron.schedule('*/14 * * * *', () => {
+  const url = process.env.BACKEND_URL || 'https://outfit-ai-9snk.onrender.com/health';
+  https.get(url, (res) => {
+    console.log(`[keep-alive] ping sent, status: ${res.statusCode}`);
+  }).on('error', (err) => {
+    console.warn(`[keep-alive] ping failed: ${err.message}`);
+  });
+});
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
