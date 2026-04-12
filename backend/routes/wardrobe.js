@@ -19,7 +19,8 @@ router.post('/', protect, async (req, res) => {
     });
 
     // Invalidate cache so next GET reflects new item
-    invalidateWardrobe(req.user.id);
+    const token = req.headers.authorization?.split(' ')[1];
+    invalidateWardrobe(token);
 
     res.status(201).json(item);
   } catch (error) {
@@ -52,7 +53,8 @@ router.delete('/:id', protect, async (req, res) => {
     await item.deleteOne();
 
     // Invalidate cache so next GET reflects deletion
-    invalidateWardrobe(req.user.id);
+    const token = req.headers.authorization?.split(' ')[1];
+    invalidateWardrobe(token);
 
     res.json({ message: 'Item removed' });
   } catch (error) {
