@@ -26,7 +26,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  // ✅ NEW FIELDS
   measurements: {
     height: { type: String, default: '' },
     weight: { type: String, default: '' },
@@ -37,5 +36,8 @@ const userSchema = new mongoose.Schema({
   avatarUrl: { type: String, default: '' },
 
 }, { timestamps: true });
+
+// Indexes for faster queries
+userSchema.index({ email: 1 });  // fast login lookup (unique already, this makes it explicit)
 
 module.exports = mongoose.model('User', userSchema);

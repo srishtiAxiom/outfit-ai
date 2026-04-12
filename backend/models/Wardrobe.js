@@ -35,4 +35,10 @@ const wardrobeSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// Indexes for faster queries
+wardrobeSchema.index({ user: 1 });                // filter by user
+wardrobeSchema.index({ user: 1, category: 1 });   // filter by user + category
+wardrobeSchema.index({ user: 1, occasion: 1 });   // filter by user + occasion
+wardrobeSchema.index({ user: 1, season: 1 });     // filter by user + season
+
 module.exports = mongoose.model('Wardrobe', wardrobeSchema);

@@ -24,4 +24,8 @@ const outfitHistorySchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// Indexes for faster queries
+outfitHistorySchema.index({ user: 1 });              // filter by user
+outfitHistorySchema.index({ user: 1, createdAt: -1 }); // filter by user, latest first
+
 module.exports = mongoose.model('OutfitHistory', outfitHistorySchema);
