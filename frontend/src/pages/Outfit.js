@@ -59,7 +59,7 @@ const Outfit = () => {
     const encodedPrompt = encodeURIComponent(prompt);
     const seed = Math.floor(Math.random() * 99999);
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${seed}`;
-
+    console.log('Generated image URL:', imageUrl); // ADD THIS
     setOutfitImageUrl(imageUrl);
     setImageLoading(false);
   };
