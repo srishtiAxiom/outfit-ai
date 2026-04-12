@@ -7,6 +7,8 @@ export default function Profile() {
   const token = localStorage.getItem('token');
 
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [measurements, setMeasurements] = useState({ height: '', weight: '', chest: '', waist: '', hips: '' });
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -16,27 +18,39 @@ export default function Profile() {
   const [uploadingA, setUploadingA] = useState(false);
   const [toast, setToast] = useState('');
 
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    console.log('Fetching profile...');
-    fetch(`${API}/api/profile/me`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!token) {
+      setError('No token found. Please log out and log back in.');
+      setLoading(false);
+      return;
+    }
+    console.log('Fetching profile from:', `${API}/api/profile/me`);
+    fetch(`${API}/api/profile/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(r => {
-        console.log('Response status:', r.status);
+        console.log('Status:', r.status);
         return r.json();
       })
       .then(data => {
-        console.log('Profile data:', data);
+        console.log('Data:', data);
         if (!data || data.message || data.error) {
-          console.log('Bad data, skipping:', data);
+          setError(data?.message || 'Failed to load profile. Please log out and log back in.');
+          setLoading(false);
           return;
         }
         setUser(data);
         if (data.measurements) setMeasurements(prev => ({ ...prev, ...data.measurements }));
         if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
         if (data.bodyType) setBodyType(data.bodyType);
+        setLoading(false);
       })
-      .catch(err => console.error('Profile fetch error:', err));
-  }, []);
+      .catch(err => {
+        console.error('Profile fetch error:', err);
+        setError('Network error. Make sure the backend is running.');
+        setLoading(false);
+      });
+  }, [token]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
@@ -86,9 +100,21 @@ export default function Profile() {
     }
   };
 
-  if (!user) return (
+  if (loading) return (
     <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'Poppins, sans-serif' }}>
       <p>Loading profile...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'Poppins, sans-serif' }}>
+      <p style={{ color: 'red', marginBottom: '1rem' }}>⚠️ {error}</p>
+      <button onClick={() => window.location.href = '/login'} style={{
+        background: '#6c63ff', color: 'white', border: 'none',
+        padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px'
+      }}>
+        Go to Login
+      </button>
     </div>
   );
 
@@ -98,7 +124,6 @@ export default function Profile() {
 
       <h1 className="profile-title">My Profile</h1>
 
-      {/* Avatar Section */}
       <div className="profile-card">
         <h2>📸 Profile Photo & Body Type</h2>
         <div className="avatar-section">
@@ -124,7 +149,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Measurements Section */}
       <div className="profile-card">
         <h2>📏 Body Measurements</h2>
         <div className="measurements-grid">
@@ -145,14 +169,11 @@ export default function Profile() {
         </button>
       </div>
 
-      {/* Account Info */}
-      {user && (
-        <div className="profile-card">
-          <h2>👤 Account Info</h2>
-          <p><strong>Name:</strong> {user.name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-        </div>
-      )}
+      <div className="profile-card">
+        <h2>👤 Account Info</h2>
+        <p><strong>Name:</strong> {user.name}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+      </div>
     </div>
   );
 }
