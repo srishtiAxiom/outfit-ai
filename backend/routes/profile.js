@@ -102,6 +102,8 @@ Respond ONLY in this JSON format (no extra text):
 
 // GET /api/profile/me
 router.get('/me', protect, async (req, res) => {
+  console.log('req.user:', req.user);
+  console.log('Auth header:', req.headers.authorization);
   try {
     const user = await User.findById(req.user._id).select('-password');
     res.json(user);
