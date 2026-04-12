@@ -23,7 +23,7 @@ router.put('/measurements', protect, async (req, res) => {
   try {
     const { height, weight, chest, waist, hips } = req.body;
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      req.user.id || req.user._id,
       { measurements: { height, weight, chest, waist, hips } },
       { new: true }
     ).select('-password');
@@ -38,7 +38,6 @@ router.post('/avatar', protect, upload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-    // 1. Upload to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: 'outfit-ai/avatars', transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }] },
@@ -49,7 +48,6 @@ router.post('/avatar', protect, upload.single('avatar'), async (req, res) => {
 
     const avatarUrl = uploadResult.secure_url;
 
-    // 2. Detect body type via Groq vision
     const base64Image = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype;
 
@@ -83,14 +81,10 @@ Respond ONLY in this JSON format (no extra text):
     try {
       const parsed = JSON.parse(visionRes.choices[0].message.content.trim());
       bodyType = `${parsed.bodyShape} / ${parsed.bodyType}`;
-
-      // Save to user
-      await User.findByIdAndUpdate(req.user._id, { avatarUrl, bodyType });
-
+      await User.findByIdAndUpdate(req.user.id || req.user._id, { avatarUrl, bodyType });
       res.json({ success: true, avatarUrl, bodyType, tip: parsed.tip });
     } catch {
-      // Vision worked but JSON parse failed — still save avatar
-      await User.findByIdAndUpdate(req.user._id, { avatarUrl });
+      await User.findByIdAndUpdate(req.user.id || req.user._id, { avatarUrl });
       res.json({ success: true, avatarUrl, bodyType: '', tip: '' });
     }
 
@@ -105,7 +99,7 @@ router.get('/me', protect, async (req, res) => {
   console.log('req.user:', req.user);
   console.log('Auth header:', req.headers.authorization);
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user.id || req.user._id).select('-password');
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
