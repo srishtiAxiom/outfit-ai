@@ -16,6 +16,7 @@ export default function Profile() {
   const [uploadingA, setUploadingA] = useState(false);
   const [toast, setToast] = useState('');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log('Fetching profile...');
     fetch(`${API}/api/profile/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -85,7 +86,6 @@ export default function Profile() {
     }
   };
 
-  // ✅ NULL CHECK HERE — after all hooks, before return
   if (!user) return (
     <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'Poppins, sans-serif' }}>
       <p>Loading profile...</p>
