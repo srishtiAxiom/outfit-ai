@@ -52,7 +52,7 @@ const Outfit = () => {
     const occasion = formData.occasion || 'casual';
 
     const lines = recommendationText.split('\n').slice(0, 3).join(' ');
-    const cleanText = lines.replace(/[*#\[\]]/g, '').slice(0, 150);
+    const cleanText = lines.replace(/[*#[\]]/g, '').slice(0, 150);
 
     const prompt = `full body fashion illustration, ${bodyType} body type, ${occasion} occasion, wearing ${cleanText}, stylish modern outfit, plain white background, fashion editorial photography`;
 
