@@ -64,5 +64,32 @@ const xssClean = (req, res, next) => {
   if (req.body) sanitize(req.body);
   next();
 };
+const rateLimit = require('express-rate-limit');
 
-module.exports = { helmet, mongoSanitize, xssClean, corsOptions };
+// Global limiter — all routes
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,                  // 100 requests per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later.' }
+});
+
+// Strict limiter — auth routes (login/register)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,                   // only 10 attempts per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many login attempts, please try again later.' }
+});
+
+// AI limiter — outfit + chat routes (expensive calls)
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,                   // 20 AI calls per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'AI request limit reached, please try again in an hour.' }
+});
+module.exports = { helmet, mongoSanitize, xssClean, corsOptions, globalLimiter, authLimiter, aiLimiter };

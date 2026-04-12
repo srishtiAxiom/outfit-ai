@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
-const { helmet, mongoSanitize, xssClean, corsOptions } = require('./middleware/security');
+const { helmet, mongoSanitize, xssClean, corsOptions, globalLimiter, authLimiter, aiLimiter } = require('./middleware/security');
 
 dotenv.config();
 connectDB();
@@ -15,16 +15,21 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 app.use(mongoSanitize);
 app.use(xssClean);
+app.use(globalLimiter);
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/wardrobe', require('./routes/wardrobe'));
-app.use('/api/outfit', require('./routes/outfit'));
+app.use('/api/outfit', aiLimiter, require('./routes/outfit'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/weather', require('./routes/weather'));
 app.use('/api/history', require('./routes/history'));
-app.use('/api/chat', require('./routes/chat'));
+app.use('/api/chat', aiLimiter, require('./routes/chat'));
 app.use('/api/profile', require('./routes/profile'));
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (req, res) => {
   res.json({ message: 'AI Outfit API is running!' });
