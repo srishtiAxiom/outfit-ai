@@ -86,7 +86,7 @@ Respond ONLY with a valid JSON object in this exact structure:
 }`;
 
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.2-11b-vision-preview',
+    model: 'llama-3.3-70b-versatile',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
     max_tokens: 1500,
