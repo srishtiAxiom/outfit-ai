@@ -108,6 +108,7 @@ async function analyzeTrends(searchResults, wardrobe, gender) {
   const prompt = `You are a fashion trend analyst for Indian users. Based on current web search results and the user's wardrobe, provide a structured trend analysis.
 
 ## User Gender: ${gender}
+## Occasion: ${occasion}
 
 
 ## Current Web Trend Data:
@@ -117,6 +118,8 @@ ${searchContext}
 ${wardrobeSummary || 'No wardrobe items yet.'}
 
 IMPORTANT: All prices must be in Indian Rupees (₹). Give realistic Indian market prices.
+IMPORTANT: All suggestions must suit a ${gender} person dressing for a ${occasion} occasion in India.
+IMPORTANT: The trendOutfitPrompt must describe a ${occasion} outfit for a ${gender} person.
 
 Respond ONLY with a valid JSON object in this exact structure:
 {
@@ -171,6 +174,7 @@ router.get('/', protect, async (req, res, next) => {
 const User = require('../models/User');
 const userProfile = await User.findById(req.user._id).select('gender').lean();
 const gender = userProfile?.gender || 'unspecified';
+const occasion = req.query.occasion || 'any';  
 
     const queries = [
   'fashion trends 2026 india style aesthetic',
@@ -202,11 +206,13 @@ const gender = userProfile?.gender || 'unspecified';
 // ─── POST /api/trends/refresh ─────────────────────────────────────────────────
 router.post('/refresh', protect, async (req, res, next) => {
   try {
-    const cacheKey = `trends_${req.user._id}`;
+    const cacheKey = `trends_${req.user._id}_${occasion}`;
+
     trendCache.del(cacheKey);
 
     const Wardrobe = require('../models/Wardrobe');
     const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
+    const occasion = req.body.occasion || 'any';  
 
     const queries = [
       'fashion trends 2025 india style aesthetic',
@@ -215,7 +221,8 @@ router.post('/refresh', protect, async (req, res, next) => {
     ];
 
     const searchResults = await fetchTrendingSearches(queries);
-    const analysis = await analyzeTrends(searchResults, wardrobe);
+    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion);
+
 
     if (analysis.shoppingGaps?.length > 0) {
       const itemNames = analysis.shoppingGaps.map((g) => g.item);

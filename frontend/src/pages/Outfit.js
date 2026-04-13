@@ -250,8 +250,7 @@ const Outfit = () => {
         </div>
       </div>
 
-      {/* ── Trend Analysis ── */}
-      <TrendAnalysis token={token} />
+      <TrendAnalysis token={token} occasion={formData.occasion} />
 
     </div>
   );

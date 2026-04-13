@@ -229,7 +229,7 @@ function buildPollinationsUrl(prompt) {
   const seed = prompt.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 9999;
   return `https://image.pollinations.ai/prompt/${encoded}?width=600&height=400&nologo=true&seed=${seed}`;
 }
-export default function TrendAnalysis({ token }) {
+export default function TrendAnalysis({ token, occasion }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -237,36 +237,38 @@ export default function TrendAnalysis({ token }) {
   const [isCached, setIsCached] = useState(false);
 
   const fetchTrends = useCallback(
-    async (forceRefresh = false) => {
-      setLoading(true);
-      setError(null);
-      setImageLoaded(false);
+  async (forceRefresh = false) => {
+    setLoading(true);
+    setError(null);
+    setImageLoaded(false);
 
-      try {
-        const endpoint = forceRefresh ? '/api/trends/refresh' : '/api/trends';
-        const method = forceRefresh ? 'POST' : 'GET';
+    try {
+      const params = occasion ? `?occasion=${encodeURIComponent(occasion)}` : '';
+      const endpoint = forceRefresh ? '/api/trends/refresh' : `/api/trends${params}`;
+      const method = forceRefresh ? 'POST' : 'GET';
 
-        const res = await fetch(`${API_BASE}${endpoint}`, {
-          method,
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        });
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: forceRefresh ? JSON.stringify({ occasion }) : undefined,
+      });
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || `Server error ${res.status}`);
-        }
-
-        const json = await res.json();
-        setData(json.data);
-        setIsCached(json.cached || false);
-      } catch (e) {
-        setError(e.message || 'Failed to load trend data');
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Server error ${res.status}`);
       }
-    },
-    [token]
-  );
+
+      const json = await res.json();
+      setData(json.data);
+      setIsCached(json.cached || false);
+    } catch (e) {
+      setError(e.message || 'Failed to load trend data');
+    } finally {
+      setLoading(false);
+    }
+  },
+  [token, occasion]   // ← add occasion to dependency array
+);
 
   useEffect(() => { fetchTrends(); }, [fetchTrends]);
 
