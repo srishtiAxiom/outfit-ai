@@ -296,7 +296,17 @@ export default function TrendAnalysis({ token, occasion }) {
   );
 
   useEffect(() => { fetchTrends(); }, [fetchTrends]);
-
+useEffect(() => {
+  if (data?.trendOutfitPrompt) {
+    const url = buildPollinationsUrl(data.trendOutfitPrompt);
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = url;
+    document.head.appendChild(link);
+    return () => document.head.removeChild(link);
+  }
+}, [data?.trendOutfitPrompt]);
   return (
     <div style={S.container}>
       <div style={S.bgGlow} />
