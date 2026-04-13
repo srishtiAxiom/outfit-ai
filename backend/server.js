@@ -34,6 +34,7 @@ app.use('/api/weather', weatherCacheMiddleware, require('./routes/weather'));
 app.use('/api/history', require('./routes/history'));
 app.use('/api/chat', aiLimiter, require('./routes/chat'));
 app.use('/api/profile', require('./routes/profile'));
+app.use('/api/trends', aiLimiter, require('./routes/trends')); // ← NEW
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

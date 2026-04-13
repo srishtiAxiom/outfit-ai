@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import TrendAnalysis from '../components/TrendAnalysis';
 
 const API_URL = 'https://outfit-ai-9snk.onrender.com';
 
@@ -51,7 +52,6 @@ const Outfit = () => {
     const bodyType = userProfile?.bodyType || 'fashion model';
     const occasion = formData.occasion || 'casual';
 
-    // Extract clothing items — look for lines with colours and garment words
     const keywords = recommendationText.match(
       /\b(black|white|red|blue|green|pink|grey|gray|brown|navy|beige|cream|yellow|purple|orange|dress|top|shirt|blouse|jeans|trousers|skirt|jacket|blazer|kurta|saree|lehenga|shorts|pants|coat|cardigan|sweater|boots|heels|sneakers|sandals|scarf|dupatta)[^,.\n]*/gi
     ) || [];
@@ -63,11 +63,10 @@ const Outfit = () => {
     const seed = Math.floor(Math.random() * 99999);
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${seed}`;
 
-    console.log('Outfit desc:', outfitDesc);
-    console.log('Generated image URL:', imageUrl);
     setOutfitImageUrl(imageUrl);
     setImageLoading(false);
-};
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -250,6 +249,10 @@ const Outfit = () => {
           )}
         </div>
       </div>
+
+      {/* ── Trend Analysis ── */}
+      <TrendAnalysis token={token} />
+
     </div>
   );
 };
