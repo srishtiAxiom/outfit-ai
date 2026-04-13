@@ -59,9 +59,7 @@ async function fetchShoppingLinks(items) {
 
       const data = await res.json();
 
-      // DEBUG: log full shape once so you can see actual keys
-      console.log(`[shopping] raw keys for "${item}":`, Object.keys(data));
-      console.log(`[shopping] first result for "${item}":`, JSON.stringify((data.shopping || data.shoppingResults || [])[0], null, 2));
+      
 
       // Serper returns "shoppingResults" on /shopping endpoint (not "shopping")
       const results = data.shoppingResults || data.shopping || [];
@@ -170,10 +168,10 @@ router.get('/', protect, async (req, res, next) => {
     const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
 
     const queries = [
-      'fashion trends 2025 india style aesthetic',
-      'trending outfits india spring summer 2025',
-      'popular clothing styles india social media 2025',
-    ];
+  'fashion trends 2026 india style aesthetic',
+  'trending outfits india spring summer 2026',
+  'popular clothing styles india social media 2026',
+];
 
     const searchResults = await fetchTrendingSearches(queries);
     const analysis = await analyzeTrends(searchResults, wardrobe);
