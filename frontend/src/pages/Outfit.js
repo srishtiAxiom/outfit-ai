@@ -56,15 +56,24 @@ const Outfit = () => {
       /\b(black|white|red|blue|green|pink|grey|gray|brown|navy|beige|cream|yellow|purple|orange|dress|top|shirt|blouse|jeans|trousers|skirt|jacket|blazer|kurta|saree|lehenga|shorts|pants|coat|cardigan|sweater|boots|heels|sneakers|sandals|scarf|dupatta)[^,.\n]*/gi
     ) || [];
 
-    const outfitDesc = keywords.slice(0, 6).join(', ') || 'stylish outfit';
-    const prompt = `full body fashion illustration, ${bodyType} body type, ${occasion} occasion, wearing ${outfitDesc}, stylish modern outfit, plain white background, fashion editorial photography`;
+   const outfitDesc = keywords.slice(0, 6).join(', ') || 'stylish outfit';
+const rawPrompt = `full body fashion illustration, ${bodyType} body type, ${occasion} occasion, wearing ${outfitDesc}, stylish modern outfit, plain white background, fashion editorial photography`;
 
-    const encodedPrompt = encodeURIComponent(prompt);
-    const seed = Math.floor(Math.random() * 99999);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${seed}`;
+// ✅ Slice to 400 chars before encoding
+const prompt = rawPrompt.slice(0, 400);
+const encodedPrompt = encodeURIComponent(prompt);
+const seed = Math.floor(Math.random() * 99999);
+const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&nologo=true&seed=${seed}`;
 
-    setOutfitImageUrl(imageUrl);
-    setImageLoading(false);
+// ✅ Preload so image starts fetching immediately
+const link = document.createElement('link');
+link.rel = 'preload';
+link.as = 'image';
+link.href = imageUrl;
+document.head.appendChild(link);
+
+setOutfitImageUrl(imageUrl);
+setImageLoading(false);
   };
 
   const handleSubmit = async (e) => {
