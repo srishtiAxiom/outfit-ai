@@ -1,7 +1,7 @@
 // frontend/src/components/TrendAnalysis.js
 import React, { useState, useEffect, useCallback } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://outfit-ai-9snk.onrender.com';
 
 // ─── Inline Styles (no external CSS dependency) ───────────────────────────────
 const S = {
