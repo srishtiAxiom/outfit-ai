@@ -209,7 +209,32 @@ const S = {
     justifyContent: 'center',
   },
   outfitImage: { width: '100%', maxHeight: '340px', objectFit: 'cover', display: 'block', borderRadius: '12px' },
-  imageLoadingText: { color: 'rgba(200,180,220,0.4)', fontSize: '13px', fontFamily: 'monospace', padding: '20px', textAlign: 'center' },
+  // Placeholder: display is 'none' by default, toggled to 'flex' via onError DOM manipulation
+  imgPlaceholder: {
+    width: '100%',
+    minHeight: '200px',
+    display: 'none',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    background: 'linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%)',
+    border: '1px dashed rgba(255,255,255,0.12)',
+    borderRadius: '12px',
+    color: 'rgba(200,180,220,0.45)',
+    padding: '32px 16px',
+    boxSizing: 'border-box',
+  },
+  imgPlaceholderIcon: { fontSize: '2.5rem', filter: 'grayscale(0.3)' },
+  imgPlaceholderLabel: {
+    fontSize: '0.8rem',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    maxWidth: '240px',
+    lineHeight: '1.5',
+    fontFamily: 'monospace',
+  },
   cachedBadge: { display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontFamily: 'monospace', color: 'rgba(200,180,220,0.35)', marginTop: '2px' },
   divider: { border: 'none', borderTop: '1px solid rgba(180,140,255,0.08)', margin: '24px 0' },
 };
@@ -222,53 +247,53 @@ if (typeof document !== 'undefined' && !document.getElementById('ta-spin-style')
 }
 
 function buildPollinationsUrl(prompt) {
-  // Compose full prompt first, THEN encode — never append after encodeURIComponent
-  const fullPrompt = `${prompt}, fashion editorial photography, high quality, studio lighting`;
+  // Slice BEFORE composing — keeps total URL well under Pollinations' limit
+  const safePrompt = prompt.slice(0, 400);
+  const fullPrompt = `${safePrompt}, fashion editorial photography, high quality, studio lighting`;
   const encoded = encodeURIComponent(fullPrompt);
-  // Stable seed based on prompt content so image doesn't regenerate on every render
+  // Seed uses original full prompt so it stays stable and consistent
   const seed = prompt.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 9999;
   return `https://image.pollinations.ai/prompt/${encoded}?width=600&height=400&nologo=true&seed=${seed}`;
 }
+
 export default function TrendAnalysis({ token, occasion }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [isCached, setIsCached] = useState(false);
 
   const fetchTrends = useCallback(
-  async (forceRefresh = false) => {
-    setLoading(true);
-    setError(null);
-    setImageLoaded(false);
+    async (forceRefresh = false) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const params = occasion ? `?occasion=${encodeURIComponent(occasion)}` : '';
-      const endpoint = forceRefresh ? '/api/trends/refresh' : `/api/trends${params}`;
-      const method = forceRefresh ? 'POST' : 'GET';
+      try {
+        const params = occasion ? `?occasion=${encodeURIComponent(occasion)}` : '';
+        const endpoint = forceRefresh ? '/api/trends/refresh' : `/api/trends${params}`;
+        const method = forceRefresh ? 'POST' : 'GET';
 
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method,
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: forceRefresh ? JSON.stringify({ occasion }) : undefined,
-      });
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method,
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: forceRefresh ? JSON.stringify({ occasion }) : undefined,
+        });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `Server error ${res.status}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || `Server error ${res.status}`);
+        }
+
+        const json = await res.json();
+        setData(json.data);
+        setIsCached(json.cached || false);
+      } catch (e) {
+        setError(e.message || 'Failed to load trend data');
+      } finally {
+        setLoading(false);
       }
-
-      const json = await res.json();
-      setData(json.data);
-      setIsCached(json.cached || false);
-    } catch (e) {
-      setError(e.message || 'Failed to load trend data');
-    } finally {
-      setLoading(false);
-    }
-  },
-  [token, occasion]   // ← add occasion to dependency array
-);
+    },
+    [token, occasion]
+  );
 
   useEffect(() => { fetchTrends(); }, [fetchTrends]);
 
@@ -377,7 +402,6 @@ export default function TrendAnalysis({ token, occasion }) {
                       <span style={S.gapPrice}>{g.estimatedPrice}</span>
                       <span style={S.priorityBadge(g.priority)}>{g.priority}</span>
                     </div>
-                    {/* Shop Link */}
                     {g.shopLink?.url && (
                       <a
                         href={g.shopLink.url}
@@ -398,36 +422,46 @@ export default function TrendAnalysis({ token, occasion }) {
           )}
 
           {/* Trend Outfit Image */}
-{data.trendOutfitPrompt && (
-  <>
-    <hr style={S.divider} />
-    <div style={S.section}>
-      <p style={S.sectionTitle}>✦ AI trend outfit preview</p>
-      <div style={S.outfitImageWrap}>
-        {!imageLoaded && (
-          <div style={S.imageLoadingText}>Generating trend outfit visual...</div>
-        )}
-        <img
-          src={buildPollinationsUrl(data.trendOutfitPrompt)}
-          alt="AI trend outfit"
-          style={{ ...S.outfitImage, display: imageLoaded ? 'block' : 'none' }}
-          onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            console.error('[Pollinations] Image failed to load. URL was:', e.target.src);
-            setImageLoaded(true); // unhide so error state shows
-          }}
-        />
-        {/* Show URL in dev so you can test it directly in browser */}
-        {process.env.NODE_ENV === 'development' && data.trendOutfitPrompt && (
-          <div style={{ fontSize: '10px', color: 'rgba(200,180,220,0.3)', padding: '6px', wordBreak: 'break-all', fontFamily: 'monospace' }}>
-            {buildPollinationsUrl(data.trendOutfitPrompt)}
-          </div>
-        )}
-      </div>
-    </div>
-  </>
-)}
-</>
+          {data.trendOutfitPrompt && (
+            <>
+              <hr style={S.divider} />
+              <div style={S.section}>
+                <p style={S.sectionTitle}>✦ AI trend outfit preview</p>
+                <div style={S.outfitImageWrap}>
+
+                  {/* Image — hides itself on error and reveals the sibling placeholder */}
+                  <img
+                    src={buildPollinationsUrl(data.trendOutfitPrompt)}
+                    alt="AI trend outfit"
+                    style={S.outfitImage}
+                    onError={(e) => {
+                      console.error('[Pollinations] Image failed. URL:', e.currentTarget.src);
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+
+                  {/* Placeholder — display:none by default, flex when image errors */}
+                  <div style={S.imgPlaceholder}>
+                    <span style={S.imgPlaceholderIcon}>👗</span>
+                    <span style={S.imgPlaceholderLabel}>Trend preview unavailable</span>
+                    <span style={{ ...S.imgPlaceholderLabel, fontSize: '0.7rem', opacity: 0.6 }}>
+                      {data.trendOutfitPrompt}
+                    </span>
+                  </div>
+
+                  {/* Dev-only: raw URL for direct browser testing */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div style={{ fontSize: '10px', color: 'rgba(200,180,220,0.3)', padding: '6px', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                      {buildPollinationsUrl(data.trendOutfitPrompt)}
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
