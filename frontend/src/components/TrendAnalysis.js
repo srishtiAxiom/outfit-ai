@@ -435,10 +435,24 @@ export default function TrendAnalysis({ token, occasion }) {
                     alt="AI trend outfit"
                     style={S.outfitImage}
                     onError={(e) => {
-                      console.error('[Pollinations] Image failed. URL:', e.currentTarget.src);
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling.style.display = 'flex';
-                    }}
+  const img = e.currentTarget;
+  console.error('[Pollinations] Image failed. URL:', img.src);
+  // Retry once silently — Pollinations sometimes needs a second attempt
+  if (!img.dataset.retried) {
+    img.dataset.retried = 'true';
+    const originalSrc = img.src;
+    img.src = '';
+    setTimeout(() => { img.src = originalSrc; }, 2000);
+    return;
+  }
+  // Only show placeholder after retry also fails
+  img.style.display = 'none';
+  img.nextElementSibling.style.display = 'flex';
+}}
+onLoad={(e) => {
+  e.currentTarget.style.display = 'block';
+  e.currentTarget.nextElementSibling.style.display = 'none';
+}}
                   />
 
                   {/* Placeholder — display:none by default, flex when image errors */}
