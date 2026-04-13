@@ -222,10 +222,13 @@ if (typeof document !== 'undefined' && !document.getElementById('ta-spin-style')
 }
 
 function buildPollinationsUrl(prompt) {
-  const encoded = encodeURIComponent(prompt + ', fashion editorial, high quality photograph');
-  return `https://image.pollinations.ai/prompt/${encoded}?width=600&height=400&nologo=true`;
+  // Compose full prompt first, THEN encode — never append after encodeURIComponent
+  const fullPrompt = `${prompt}, fashion editorial photography, high quality, studio lighting`;
+  const encoded = encodeURIComponent(fullPrompt);
+  // Stable seed based on prompt content so image doesn't regenerate on every render
+  const seed = prompt.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 9999;
+  return `https://image.pollinations.ai/prompt/${encoded}?width=600&height=400&nologo=true&seed=${seed}`;
 }
-
 export default function TrendAnalysis({ token }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -393,25 +396,36 @@ export default function TrendAnalysis({ token }) {
           )}
 
           {/* Trend Outfit Image */}
-          {data.trendOutfitPrompt && (
-            <>
-              <hr style={S.divider} />
-              <div style={S.section}>
-                <p style={S.sectionTitle}>✦ AI trend outfit preview</p>
-                <div style={S.outfitImageWrap}>
-                  {!imageLoaded && <div style={S.imageLoadingText}>Generating trend outfit visual...</div>}
-                  <img
-                    src={buildPollinationsUrl(data.trendOutfitPrompt)}
-                    alt="AI trend outfit"
-                    style={{ ...S.outfitImage, display: imageLoaded ? 'block' : 'none' }}
-                    onLoad={() => setImageLoaded(true)}
-                    onError={() => setImageLoaded(true)}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-        </>
+{data.trendOutfitPrompt && (
+  <>
+    <hr style={S.divider} />
+    <div style={S.section}>
+      <p style={S.sectionTitle}>✦ AI trend outfit preview</p>
+      <div style={S.outfitImageWrap}>
+        {!imageLoaded && (
+          <div style={S.imageLoadingText}>Generating trend outfit visual...</div>
+        )}
+        <img
+          src={buildPollinationsUrl(data.trendOutfitPrompt)}
+          alt="AI trend outfit"
+          style={{ ...S.outfitImage, display: imageLoaded ? 'block' : 'none' }}
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            console.error('[Pollinations] Image failed to load. URL was:', e.target.src);
+            setImageLoaded(true); // unhide so error state shows
+          }}
+        />
+        {/* Show URL in dev so you can test it directly in browser */}
+        {process.env.NODE_ENV === 'development' && data.trendOutfitPrompt && (
+          <div style={{ fontSize: '10px', color: 'rgba(200,180,220,0.3)', padding: '6px', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+            {buildPollinationsUrl(data.trendOutfitPrompt)}
+          </div>
+        )}
+      </div>
+    </div>
+  </>
+)}
+</>
       )}
     </div>
   );

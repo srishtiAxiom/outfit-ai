@@ -38,7 +38,6 @@ async function fetchTrendingSearches(queries) {
   return results;
 }
 
-// ─── Helper: fetch shopping links for gap items via Serper ────────────────────
 async function fetchShoppingLinks(items) {
   const links = {};
 
@@ -53,24 +52,45 @@ async function fetchShoppingLinks(items) {
         body: JSON.stringify({ q: `buy ${item} india`, gl: 'in', hl: 'en', num: 3 }),
       });
 
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn(`[shopping] Serper error ${res.status} for "${item}"`);
+        continue;
+      }
+
       const data = await res.json();
 
-      // Pick first shopping result that has a link
-      const first = (data.shopping || []).find((r) => r.link);
+      // DEBUG: log full shape once so you can see actual keys
+      console.log(`[shopping] raw keys for "${item}":`, Object.keys(data));
+      console.log(`[shopping] first result for "${item}":`, JSON.stringify((data.shopping || data.shoppingResults || [])[0], null, 2));
+
+      // Serper returns "shoppingResults" on /shopping endpoint (not "shopping")
+      const results = data.shoppingResults || data.shopping || [];
+      const first = results.find((r) => r.link);
+
       if (first) {
         links[item] = {
           url: first.link,
-          store: first.source || 'Shop',
+          store: first.source || first.merchant || 'Shop',
           price: first.price || null,
         };
       } else {
-        // Fallback to organic search link
-        const organic = (data.organic || []).find((r) => r.link);
-        if (organic) links[item] = { url: organic.link, store: 'Search', price: null };
+        // Fallback: plain web search for the item
+        const fallbackRes = await fetch('https://google.serper.dev/search', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': process.env.SERPER_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ q: `buy ${item} online india`, gl: 'in', hl: 'en', num: 3 }),
+        });
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          const organic = (fallbackData.organic || []).find((r) => r.link);
+          if (organic) links[item] = { url: organic.link, store: 'Search', price: null };
+        }
       }
     } catch (e) {
-      // Skip if shopping search fails for this item
+      console.error(`[shopping] exception for "${item}":`, e.message);
     }
   }
 
