@@ -4,6 +4,8 @@ const router = express.Router();
 const Groq = require('groq-sdk');
 const NodeCache = require('node-cache');
 const { protect } = require('../middleware/auth');
+const Wardrobe = require('../models/Wardrobe');   // ← moved to top
+const User = require('../models/User');            // ← moved to top
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -38,6 +40,7 @@ async function fetchTrendingSearches(queries) {
   return results;
 }
 
+// ─── Helper: fetch shopping links for gap items via Serper ────────────────────
 async function fetchShoppingLinks(items) {
   const links = {};
 
@@ -58,8 +61,6 @@ async function fetchShoppingLinks(items) {
       }
 
       const data = await res.json();
-
-      
 
       // Serper returns "shoppingResults" on /shopping endpoint (not "shopping")
       const results = data.shoppingResults || data.shopping || [];
@@ -96,7 +97,7 @@ async function fetchShoppingLinks(items) {
 }
 
 // ─── Helper: analyze trends with Groq ────────────────────────────────────────
-async function analyzeTrends(searchResults, wardrobe, gender) {
+async function analyzeTrends(searchResults, wardrobe, gender, occasion) {  // ← occasion param added
   const wardrobeSummary = wardrobe
     .map((item) => `${item.category} - ${item.color} - ${item.occasion} - ${item.season}`)
     .join('\n');
@@ -109,7 +110,6 @@ async function analyzeTrends(searchResults, wardrobe, gender) {
 
 ## User Gender: ${gender}
 ## Occasion: ${occasion}
-
 
 ## Current Web Trend Data:
 ${searchContext}
@@ -164,32 +164,30 @@ Respond ONLY with a valid JSON object in this exact structure:
 // ─── GET /api/trends ──────────────────────────────────────────────────────────
 router.get('/', protect, async (req, res, next) => {
   try {
-    const cacheKey = `trends_${req.user._id}`;
+    const occasion = req.query.occasion || 'any';                          // ← declared first
+    const cacheKey = `trends_${req.user._id}_${occasion}`;                 // ← uses occasion
+
     const cached = trendCache.get(cacheKey);
     if (cached) {
       return res.json({ success: true, data: cached, cached: true });
     }
 
-    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
-const User = require('../models/User');
-const userProfile = await User.findById(req.user._id).select('gender').lean();
-const gender = userProfile?.gender || 'unspecified';
-const occasion = req.query.occasion || 'any';  
+    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();   // ← Wardrobe from top-level require
+    const userProfile = await User.findById(req.user._id).select('gender').lean();
+    const gender = userProfile?.gender || 'unspecified';
 
     const queries = [
-  'fashion trends 2026 india style aesthetic',
-  'trending outfits india spring summer 2026',
-  'popular clothing styles india social media 2026',
-];
+      'fashion trends 2026 india style aesthetic',
+      'trending outfits india spring summer 2026',
+      'popular clothing styles india social media 2026',
+    ];
 
     const searchResults = await fetchTrendingSearches(queries);
-    const analysis = await analyzeTrends(searchResults, wardrobe, gender);
+    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion); // ← occasion passed
 
-    // Fetch shopping links for each gap item
     if (analysis.shoppingGaps?.length > 0) {
       const itemNames = analysis.shoppingGaps.map((g) => g.item);
       const shoppingLinks = await fetchShoppingLinks(itemNames);
-
       analysis.shoppingGaps = analysis.shoppingGaps.map((gap) => ({
         ...gap,
         shopLink: shoppingLinks[gap.item] || null,
@@ -206,28 +204,27 @@ const occasion = req.query.occasion || 'any';
 // ─── POST /api/trends/refresh ─────────────────────────────────────────────────
 router.post('/refresh', protect, async (req, res, next) => {
   try {
-    const cacheKey = `trends_${req.user._id}_${occasion}`;
+    const occasion = req.body.occasion || 'any';                           // ← declared first
+    const cacheKey = `trends_${req.user._id}_${occasion}`;                 // ← uses occasion
 
     trendCache.del(cacheKey);
 
-    const Wardrobe = require('../models/Wardrobe');
-    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
-    const occasion = req.body.occasion || 'any';  
+    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();   // ← Wardrobe from top-level require
+    const userProfile = await User.findById(req.user._id).select('gender').lean();
+    const gender = userProfile?.gender || 'unspecified';
 
     const queries = [
-      'fashion trends 2025 india style aesthetic',
-      'trending outfits india spring summer 2025',
-      'popular clothing styles india social media 2025',
+      'fashion trends 2026 india style aesthetic',
+      'trending outfits india spring summer 2026',
+      'popular clothing styles india social media 2026',
     ];
 
     const searchResults = await fetchTrendingSearches(queries);
-    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion);
-
+    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion); // ← occasion passed
 
     if (analysis.shoppingGaps?.length > 0) {
       const itemNames = analysis.shoppingGaps.map((g) => g.item);
       const shoppingLinks = await fetchShoppingLinks(itemNames);
-
       analysis.shoppingGaps = analysis.shoppingGaps.map((gap) => ({
         ...gap,
         shopLink: shoppingLinks[gap.item] || null,
