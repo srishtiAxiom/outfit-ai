@@ -13,7 +13,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
-
+app.set('trust proxy', 1);
 // Security middleware (order matters)
 app.use(helmet());
 app.use(cors(corsOptions));
