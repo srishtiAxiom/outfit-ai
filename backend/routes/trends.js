@@ -4,8 +4,8 @@ const router = express.Router();
 const Groq = require('groq-sdk');
 const NodeCache = require('node-cache');
 const { protect } = require('../middleware/auth');
-const Wardrobe = require('../models/Wardrobe');   // ← moved to top
-const User = require('../models/User');            // ← moved to top
+const Wardrobe = require('../models/Wardrobe');
+const User = require('../models/User');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -41,7 +41,7 @@ async function fetchTrendingSearches(queries) {
 }
 
 // ─── Helper: fetch shopping links for gap items via Serper ────────────────────
-async function fetchShoppingLinks(items) {
+async function fetchShoppingLinks(items, gender) {
   const links = {};
 
   for (const item of items) {
@@ -52,7 +52,7 @@ async function fetchShoppingLinks(items) {
           'X-API-KEY': process.env.SERPER_API_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ q: `buy ${item} india`, gl: 'in', hl: 'en', num: 3 }),
+        body: JSON.stringify({ q: `buy ${gender || 'unisex'} ${item} india`, gl: 'in', hl: 'en', num: 3 }),
       });
 
       if (!res.ok) {
@@ -62,7 +62,6 @@ async function fetchShoppingLinks(items) {
 
       const data = await res.json();
 
-      // Serper returns "shoppingResults" on /shopping endpoint (not "shopping")
       const results = data.shoppingResults || data.shopping || [];
       const first = results.find((r) => r.link);
 
@@ -73,14 +72,13 @@ async function fetchShoppingLinks(items) {
           price: first.price || null,
         };
       } else {
-        // Fallback: plain web search for the item
         const fallbackRes = await fetch('https://google.serper.dev/search', {
           method: 'POST',
           headers: {
             'X-API-KEY': process.env.SERPER_API_KEY,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ q: `buy ${item} online india`, gl: 'in', hl: 'en', num: 3 }),
+          body: JSON.stringify({ q: `buy ${gender || 'unisex'} ${item} online india`, gl: 'in', hl: 'en', num: 3 }),
         });
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json();
@@ -97,7 +95,7 @@ async function fetchShoppingLinks(items) {
 }
 
 // ─── Helper: analyze trends with Groq ────────────────────────────────────────
-async function analyzeTrends(searchResults, wardrobe, gender, occasion) {  // ← occasion param added
+async function analyzeTrends(searchResults, wardrobe, gender, occasion) {
   const wardrobeSummary = wardrobe
     .map((item) => `${item.category} - ${item.color} - ${item.occasion} - ${item.season}`)
     .join('\n');
@@ -164,15 +162,15 @@ Respond ONLY with a valid JSON object in this exact structure:
 // ─── GET /api/trends ──────────────────────────────────────────────────────────
 router.get('/', protect, async (req, res, next) => {
   try {
-    const occasion = req.query.occasion || 'any';                          // ← declared first
-    const cacheKey = `trends_${req.user._id}_${occasion}`;                 // ← uses occasion
+    const occasion = req.query.occasion || 'any';
+    const cacheKey = `trends_${req.user._id}_${occasion}`;
 
     const cached = trendCache.get(cacheKey);
     if (cached) {
       return res.json({ success: true, data: cached, cached: true });
     }
 
-    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();   // ← Wardrobe from top-level require
+    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
     const userProfile = await User.findById(req.user._id).select('gender').lean();
     const gender = userProfile?.gender || 'unspecified';
 
@@ -183,11 +181,12 @@ router.get('/', protect, async (req, res, next) => {
     ];
 
     const searchResults = await fetchTrendingSearches(queries);
-    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion); // ← occasion passed
+    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion);
 
     if (analysis.shoppingGaps?.length > 0) {
       const itemNames = analysis.shoppingGaps.map((g) => g.item);
-      const shoppingLinks = await fetchShoppingLinks(itemNames);
+      // ✅ gender now passed
+      const shoppingLinks = await fetchShoppingLinks(itemNames, gender);
       analysis.shoppingGaps = analysis.shoppingGaps.map((gap) => ({
         ...gap,
         shopLink: shoppingLinks[gap.item] || null,
@@ -204,12 +203,12 @@ router.get('/', protect, async (req, res, next) => {
 // ─── POST /api/trends/refresh ─────────────────────────────────────────────────
 router.post('/refresh', protect, async (req, res, next) => {
   try {
-    const occasion = req.body.occasion || 'any';                           // ← declared first
-    const cacheKey = `trends_${req.user._id}_${occasion}`;                 // ← uses occasion
+    const occasion = req.body.occasion || 'any';
+    const cacheKey = `trends_${req.user._id}_${occasion}`;
 
     trendCache.del(cacheKey);
 
-    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();   // ← Wardrobe from top-level require
+    const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
     const userProfile = await User.findById(req.user._id).select('gender').lean();
     const gender = userProfile?.gender || 'unspecified';
 
@@ -220,11 +219,12 @@ router.post('/refresh', protect, async (req, res, next) => {
     ];
 
     const searchResults = await fetchTrendingSearches(queries);
-    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion); // ← occasion passed
+    const analysis = await analyzeTrends(searchResults, wardrobe, gender, occasion);
 
     if (analysis.shoppingGaps?.length > 0) {
       const itemNames = analysis.shoppingGaps.map((g) => g.item);
-      const shoppingLinks = await fetchShoppingLinks(itemNames);
+      // ✅ gender now passed
+      const shoppingLinks = await fetchShoppingLinks(itemNames, gender);
       analysis.shoppingGaps = analysis.shoppingGaps.map((gap) => ({
         ...gap,
         shopLink: shoppingLinks[gap.item] || null,
