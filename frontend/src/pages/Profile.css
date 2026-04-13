@@ -169,3 +169,31 @@ color: transparent;
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+/* Gender selector */
+.gender-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gender-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.gender-btn:hover {
+  border-color: #6c63ff;
+  color: #6c63ff;
+}
+
+.gender-btn--active {
+  background: #6c63ff;
+  border-color: #6c63ff;
+  color: white;
+  font-weight: 600;
+}

@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'non-binary', 'unspecified'],
+    default: 'unspecified',
+  },
   measurements: {
     height: { type: String, default: '' },
     weight: { type: String, default: '' },

@@ -18,22 +18,21 @@ export default function Profile() {
   const [uploadingA, setUploadingA] = useState(false);
   const [toast, setToast] = useState('');
 
+  // ── Gender state ──────────────────────────────────────────────────────────
+  const [gender, setGender] = useState('unspecified');
+  const [savingG, setSavingG] = useState(false);
+
   useEffect(() => {
     if (!token) {
       setError('No token found. Please log out and log back in.');
       setLoading(false);
       return;
     }
-    console.log('Fetching profile from:', `${API}/api/profile/me`);
     fetch(`${API}/api/profile/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(r => {
-        console.log('Status:', r.status);
-        return r.json();
-      })
+      .then(r => r.json())
       .then(data => {
-        console.log('Data:', data);
         if (!data || data.message || data.error) {
           setError(data?.message || 'Failed to load profile. Please log out and log back in.');
           setLoading(false);
@@ -43,6 +42,7 @@ export default function Profile() {
         if (data.measurements) setMeasurements(prev => ({ ...prev, ...data.measurements }));
         if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
         if (data.bodyType) setBodyType(data.bodyType);
+        if (data.gender) setGender(data.gender);   // ← load saved gender
         setLoading(false);
       })
       .catch(err => {
@@ -100,6 +100,19 @@ export default function Profile() {
     }
   };
 
+  // ── Save gender via PUT /api/profile/update ───────────────────────────────
+  const saveGender = async () => {
+    setSavingG(true);
+    const res = await fetch(`${API}/api/profile/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ gender }),
+    });
+    setSavingG(false);
+    if (res.ok) showToast('✅ Gender preference saved!');
+    else showToast('❌ Failed to save gender.');
+  };
+
   if (loading) return (
     <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'Poppins, sans-serif' }}>
       <p>Loading profile...</p>
@@ -124,6 +137,7 @@ export default function Profile() {
 
       <h1 className="profile-title">My Profile</h1>
 
+      {/* ── Avatar & Body Type ── */}
       <div className="profile-card">
         <h2>📸 Profile Photo & Body Type</h2>
         <div className="avatar-section">
@@ -149,6 +163,34 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* ── Gender ── */}
+      <div className="profile-card">
+        <h2>⚧ Style Preference</h2>
+        <p style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>
+          Used to personalise trend suggestions and outfit recommendations.
+        </p>
+        <div className="gender-options">
+          {[
+            { value: 'female',     label: '♀ Female' },
+            { value: 'male',       label: '♂ Male' },
+            { value: 'non-binary', label: '⚧ Non-binary' },
+            { value: 'unspecified', label: '— Prefer not to say' },
+          ].map(opt => (
+            <button
+              key={opt.value}
+              className={`gender-btn${gender === opt.value ? ' gender-btn--active' : ''}`}
+              onClick={() => setGender(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <button className="primary-btn" onClick={saveGender} disabled={savingG} style={{ marginTop: '16px' }}>
+          {savingG ? 'Saving...' : '💾 Save Preference'}
+        </button>
+      </div>
+
+      {/* ── Measurements ── */}
       <div className="profile-card">
         <h2>📏 Body Measurements</h2>
         <div className="measurements-grid">
@@ -169,6 +211,7 @@ export default function Profile() {
         </button>
       </div>
 
+      {/* ── Account Info ── */}
       <div className="profile-card">
         <h2>👤 Account Info</h2>
         <p><strong>Name:</strong> {user.name}</p>

@@ -96,7 +96,7 @@ async function fetchShoppingLinks(items) {
 }
 
 // ─── Helper: analyze trends with Groq ────────────────────────────────────────
-async function analyzeTrends(searchResults, wardrobe) {
+async function analyzeTrends(searchResults, wardrobe, gender) {
   const wardrobeSummary = wardrobe
     .map((item) => `${item.category} - ${item.color} - ${item.occasion} - ${item.season}`)
     .join('\n');
@@ -106,6 +106,9 @@ async function analyzeTrends(searchResults, wardrobe) {
     .join('\n\n');
 
   const prompt = `You are a fashion trend analyst for Indian users. Based on current web search results and the user's wardrobe, provide a structured trend analysis.
+
+## User Gender: ${gender}
+
 
 ## Current Web Trend Data:
 ${searchContext}
@@ -164,8 +167,10 @@ router.get('/', protect, async (req, res, next) => {
       return res.json({ success: true, data: cached, cached: true });
     }
 
-    const Wardrobe = require('../models/Wardrobe');
     const wardrobe = await Wardrobe.find({ user: req.user._id }).lean();
+const User = require('../models/User');
+const userProfile = await User.findById(req.user._id).select('gender').lean();
+const gender = userProfile?.gender || 'unspecified';
 
     const queries = [
   'fashion trends 2026 india style aesthetic',
@@ -174,7 +179,7 @@ router.get('/', protect, async (req, res, next) => {
 ];
 
     const searchResults = await fetchTrendingSearches(queries);
-    const analysis = await analyzeTrends(searchResults, wardrobe);
+    const analysis = await analyzeTrends(searchResults, wardrobe, gender);
 
     // Fetch shopping links for each gap item
     if (analysis.shoppingGaps?.length > 0) {

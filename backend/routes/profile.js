@@ -105,5 +105,24 @@ router.get('/me', protect, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+// PUT /api/profile/update
+router.put('/update', protect, async (req, res) => {
+  try {
+    const allowed = ['name', 'skinTone', 'preferredStyle', 'gender'];
+    const updates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
 
+    const user = await User.findByIdAndUpdate(
+      req.user.id || req.user._id,
+      updates,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;
