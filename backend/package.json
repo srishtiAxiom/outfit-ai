@@ -29,6 +29,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "node-cache": "^5.1.2",
     "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.5",
     "streamifier": "^0.1.1"
   },
   "devDependencies": {
