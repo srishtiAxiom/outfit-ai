@@ -1,16 +1,9 @@
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS  // Gmail App Password, NOT your real password
-  }
-});
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendOtpEmail = async (toEmail, otp) => {
-  await transporter.sendMail({
-    from: `"OutfitAI" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'OutfitAI <onboarding@resend.dev>',
     to: toEmail,
     subject: 'Your OutfitAI Verification Code',
     html: `
