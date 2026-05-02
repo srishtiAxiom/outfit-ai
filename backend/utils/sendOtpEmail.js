@@ -1,13 +1,13 @@
-const Brevo = require("@getbrevo/brevo");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-const client = Brevo.ApiClient.instance;
-client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+defaultClient.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
-const transactionalApi = new Brevo.TransactionalEmailsApi();
+const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 const sendOtpEmail = async (toEmail, otp) => {
   try {
-    const email = new Brevo.SendSmtpEmail();
+    const email = new SibApiV3Sdk.SendSmtpEmail();
     email.sender = { name: "OutfitAI", email: process.env.BREVO_SENDER_EMAIL };
     email.to = [{ email: toEmail }];
     email.subject = "Your OutfitAI verification code";
