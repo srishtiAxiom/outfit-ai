@@ -1,5 +1,6 @@
 const helmet = require('helmet');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
 const allowedOrigins = [
   'https://outfit-ai-phi.vercel.app',
@@ -64,32 +65,50 @@ const xssClean = (req, res, next) => {
   if (req.body) sanitize(req.body);
   next();
 };
-const rateLimit = require('express-rate-limit');
 
 // Global limiter — all routes
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,                  // 100 requests per 15 min
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many requests, please try again later.' }
+  message: { success: false, error: 'Too many requests, please try again later.' }
 });
 
 // Strict limiter — auth routes (login/register)
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,                   // only 10 attempts per 15 min
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many login attempts, please try again later.' }
+  message: { success: false, error: 'Too many login attempts, please try again later.' }
 });
 
 // AI limiter — outfit + chat routes (expensive calls)
 const aiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20,                   // 20 AI calls per hour
+  windowMs: 60 * 60 * 1000,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'AI request limit reached, please try again in an hour.' }
+  message: { success: false, error: 'AI request limit reached, please try again in an hour.' }
 });
-module.exports = { helmet, mongoSanitize, xssClean, corsOptions, globalLimiter, authLimiter, aiLimiter };
+
+// OTP limiter — send-otp endpoint specifically
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many OTP requests, please try again later.' }
+});
+
+module.exports = {
+  helmet,
+  corsOptions,
+  mongoSanitize,
+  xssClean,
+  globalLimiter,
+  authLimiter,
+  aiLimiter,
+  otpLimiter,  // ← now actually exported
+};
