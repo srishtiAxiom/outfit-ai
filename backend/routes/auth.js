@@ -101,14 +101,18 @@ router.post('/login', async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
 
-    // Always run bcrypt to prevent timing attacks
-    // dummyHash is cost 8 to match real hashes — keeps timing consistent
+    const t1 = Date.now();
+    const user = await User.findOne({ email: normalizedEmail });
+    const t2 = Date.now();
+
     const dummyHash = '$2a$08$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
     const isMatch = user
       ? await bcrypt.compare(password, user.password)
       : await bcrypt.compare(password, dummyHash);
+    const t3 = Date.now();
+
+    console.log(`[login timing] DB: ${t2 - t1}ms | bcrypt: ${t3 - t2}ms | total: ${t3 - t1}ms`);
 
     if (!user || !isMatch) {
       return res.status(401).json({ success: false, error: 'Invalid email or password' });
@@ -127,19 +131,3 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ success: false, error: 'Login failed, please try again' });
   }
 });
-
-// Get profile — protected
-router.get('/profile', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    res.json({ success: true, user });
-  } catch (err) {
-    console.error('[profile]', err);
-    res.status(500).json({ success: false, error: 'Failed to fetch profile' });
-  }
-});
-
-module.exports = router;
