@@ -38,7 +38,6 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
 
   } catch (err) {
     console.error('[send-otp]', err);
-    // Don't leak whether it was a DB error vs email error
     res.status(500).json({ success: false, error: 'Failed to send OTP, please try again' });
   }
 });
@@ -48,7 +47,6 @@ router.post('/verify-otp-register', async (req, res) => {
   try {
     const { email, otp, password, name, gender } = req.body;
 
-    // Input validation
     if (!email || !otp || !password || !name) {
       return res.status(400).json({ success: false, error: 'email, otp, password and name are required' });
     }
@@ -68,7 +66,7 @@ router.post('/verify-otp-register', async (req, res) => {
 
     await Otp.deleteOne({ email: normalizedEmail });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 8); // ← 10→8
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
@@ -106,7 +104,8 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
 
     // Always run bcrypt to prevent timing attacks
-    const dummyHash = '$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    // dummyHash is cost 8 to match real hashes — keeps timing consistent
+    const dummyHash = '$2a$08$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
     const isMatch = user
       ? await bcrypt.compare(password, user.password)
       : await bcrypt.compare(password, dummyHash);
