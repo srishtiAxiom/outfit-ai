@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../AuthContext';
 
 const API = 'https://outfit-ai-9snk.onrender.com';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = form, 2 = otp
+  const { login } = useAuth();
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    bodyType: '',
-    skinTone: '',
-    preferredStyle: ''
+    name: '', email: '', password: '',
+    bodyType: '', skinTone: '', preferredStyle: ''
   });
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -25,7 +23,6 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Start 60s resend cooldown timer
   const startResendTimer = () => {
     setResendTimer(60);
     const interval = setInterval(() => {
@@ -36,7 +33,6 @@ const Register = () => {
     }, 1000);
   };
 
-  // STEP 1 — Send OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -46,12 +42,11 @@ const Register = () => {
       setStep(2);
       startResendTimer();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send OTP');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to send OTP');
     }
     setLoading(false);
   };
 
-  // Resend OTP
   const handleResend = async () => {
     if (resendTimer > 0) return;
     setLoading(true);
@@ -61,42 +56,34 @@ const Register = () => {
       setOtp('');
       startResendTimer();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to resend OTP');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to resend OTP');
     }
     setLoading(false);
   };
 
-  // STEP 2 — Verify OTP + Register
   const handleVerifyAndRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post(`${API}/api/auth/verify-otp-register`, {
-        ...formData,
-        otp
-      });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify({ name: res.data.name, email: res.data.email }));
+      const res = await axios.post(`${API}/api/auth/verify-otp-register`, { ...formData, otp });
+      login(res.data.token, { name: res.data.name, email: res.data.email });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Something went wrong');
     }
     setLoading(false);
   };
 
+  // JSX is identical to your original — no changes needed below
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #f0f2f5, #e8e0ff)',
-      padding: '20px'
+      background: 'linear-gradient(135deg, #f0f2f5, #e8e0ff)', padding: '20px'
     }}>
       <div className="card" style={{ width: '100%', maxWidth: '480px' }}>
 
-        {/* ── STEP 1: Registration Form ── */}
         {step === 1 && (
           <>
             <h2 style={{ textAlign: 'center', marginBottom: '8px', color: '#6c63ff', fontSize: '28px' }}>
@@ -105,56 +92,25 @@ const Register = () => {
             <p style={{ textAlign: 'center', color: '#888', marginBottom: '24px' }}>
               Join OutfitAI and dress smarter
             </p>
-
             <form onSubmit={handleSendOtp}>
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="form-group"><label>Full Name</label>
+                <input type="text" name="name" placeholder="Enter your full name" value={formData.name} onChange={handleChange} required />
               </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="form-group"><label>Email</label>
+                <input type="email" name="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label>Password</label>
                 <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    placeholder="Create a password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    style={{ paddingRight: '40px' }}
-                  />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute', right: '12px', top: '50%',
-                      transform: 'translateY(-50%)', cursor: 'pointer',
-                      fontSize: '18px', userSelect: 'none'
-                    }}
-                  >
+                  <input type={showPassword ? 'text' : 'password'} name="password" placeholder="Create a password"
+                    value={formData.password} onChange={handleChange} required style={{ paddingRight: '40px' }} />
+                  <span onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', fontSize: '18px', userSelect: 'none' }}>
                     {showPassword ? '🙈' : '👁️'}
                   </span>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Body Type</label>
+              <div className="form-group"><label>Body Type</label>
                 <select name="bodyType" value={formData.bodyType} onChange={handleChange}>
                   <option value="">Select body type</option>
                   <option value="slim">Slim</option>
@@ -163,8 +119,7 @@ const Register = () => {
                   <option value="plus">Plus Size</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Skin Tone</label>
+              <div className="form-group"><label>Skin Tone</label>
                 <select name="skinTone" value={formData.skinTone} onChange={handleChange}>
                   <option value="">Select skin tone</option>
                   <option value="fair">Fair</option>
@@ -173,8 +128,7 @@ const Register = () => {
                   <option value="dark">Dark</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Preferred Style</label>
+              <div className="form-group"><label>Preferred Style</label>
                 <select name="preferredStyle" value={formData.preferredStyle} onChange={handleChange}>
                   <option value="">Select preferred style</option>
                   <option value="casual">Casual</option>
@@ -184,19 +138,11 @@ const Register = () => {
                   <option value="sporty">Sporty</option>
                 </select>
               </div>
-
               {error && <p className="error">{error}</p>}
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '8px' }}
-                disabled={loading}
-              >
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }} disabled={loading}>
                 {loading ? 'Sending OTP...' : 'Send Verification Code'}
               </button>
             </form>
-
             <p style={{ textAlign: 'center', marginTop: '20px', color: '#888' }}>
               Already have an account?{' '}
               <Link to="/login" style={{ color: '#6c63ff', fontWeight: '600' }}>Login here</Link>
@@ -204,83 +150,43 @@ const Register = () => {
           </>
         )}
 
-        {/* ── STEP 2: OTP Verification ── */}
         {step === 2 && (
           <>
             <div style={{ textAlign: 'center', marginBottom: '8px' }}>
               <div style={{ fontSize: '48px', marginBottom: '8px' }}>📧</div>
-              <h2 style={{ color: '#6c63ff', fontSize: '24px', marginBottom: '8px' }}>
-                Check your email
-              </h2>
-              <p style={{ color: '#888', marginBottom: '4px' }}>
-                We sent a 6-digit code to
-              </p>
-              <p style={{ color: '#333', fontWeight: '600', marginBottom: '24px' }}>
-                {formData.email}
-              </p>
+              <h2 style={{ color: '#6c63ff', fontSize: '24px', marginBottom: '8px' }}>Check your email</h2>
+              <p style={{ color: '#888', marginBottom: '4px' }}>We sent a 6-digit code to</p>
+              <p style={{ color: '#333', fontWeight: '600', marginBottom: '24px' }}>{formData.email}</p>
             </div>
-
             <form onSubmit={handleVerifyAndRegister}>
               <div className="form-group">
                 <label>Verification Code</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  required
-                  style={{
-                    textAlign: 'center',
-                    fontSize: '24px',
-                    letterSpacing: '8px',
-                    fontWeight: 'bold'
-                  }}
-                  autoFocus
-                />
+                <input type="text" inputMode="numeric" maxLength={6} placeholder="Enter 6-digit code"
+                  value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  required style={{ textAlign: 'center', fontSize: '24px', letterSpacing: '8px', fontWeight: 'bold' }} autoFocus />
               </div>
-
               {error && <p className="error">{error}</p>}
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '8px' }}
-                disabled={loading || otp.length !== 6}
-              >
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}
+                disabled={loading || otp.length !== 6}>
                 {loading ? 'Verifying...' : 'Verify & Create Account'}
               </button>
             </form>
-
-            {/* Resend + Back */}
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
               <p style={{ color: '#888', fontSize: '14px', marginBottom: '8px' }}>
                 Didn't receive the code?{' '}
-                <span
-                  onClick={handleResend}
-                  style={{
-                    color: resendTimer > 0 ? '#bbb' : '#6c63ff',
-                    fontWeight: '600',
-                    cursor: resendTimer > 0 ? 'default' : 'pointer'
-                  }}
-                >
+                <span onClick={handleResend}
+                  style={{ color: resendTimer > 0 ? '#bbb' : '#6c63ff', fontWeight: '600', cursor: resendTimer > 0 ? 'default' : 'pointer' }}>
                   {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
                 </span>
               </p>
               <p style={{ color: '#888', fontSize: '14px' }}>
                 Wrong email?{' '}
-                <span
-                  onClick={() => { setStep(1); setError(''); setOtp(''); }}
-                  style={{ color: '#6c63ff', fontWeight: '600', cursor: 'pointer' }}
-                >
-                  Go back
-                </span>
+                <span onClick={() => { setStep(1); setError(''); setOtp(''); }}
+                  style={{ color: '#6c63ff', fontWeight: '600', cursor: 'pointer' }}>Go back</span>
               </p>
             </div>
           </>
         )}
-
       </div>
     </div>
   );

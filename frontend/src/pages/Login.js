@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -18,11 +21,10 @@ const [showPassword, setShowPassword] = useState(false);
     setError('');
     try {
       const res = await axios.post('https://outfit-ai-9snk.onrender.com/api/auth/login', formData);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify({ name: res.data.name, email: res.data.email }));
+      login(res.data.token, { name: res.data.name, email: res.data.email });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Something went wrong');
     }
     setLoading(false);
   };
@@ -66,13 +68,9 @@ const [showPassword, setShowPassword] = useState(false);
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  userSelect: 'none'
+                  position: 'absolute', right: '12px', top: '50%',
+                  transform: 'translateY(-50%)', cursor: 'pointer',
+                  fontSize: '18px', userSelect: 'none'
                 }}
               >
                 {showPassword ? '🙈' : '👁️'}
