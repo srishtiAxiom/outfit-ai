@@ -131,3 +131,5 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ success: false, error: 'Login failed, please try again' });
   }
 });
+
+module.exports = router;
